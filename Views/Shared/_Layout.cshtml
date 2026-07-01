@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GLMS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+            /* Horizontal Navigation - No Dropdowns */
+            .navbar-nav {
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+                align-items: center;
+            }
+        
+                .navbar-nav .nav-item {
+                    list-style: none;
+                }
+        
+                .navbar-nav .nav-link {
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    white-space: nowrap;
+                }
+        
+                    .navbar-nav .nav-link.btn-link {
+                        background: none;
+                        border: none;
+                        color: var(--text-light);
+                    }
+        
+                        .navbar-nav .nav-link.btn-link:hover {
+                            color: #20B2AA;
+                            background: rgba(32, 178, 170, 0.1);
+                        }
+        
+            .navbar-toggler {
+                display: none !important;
+            }
+        
+            .navbar-collapse {
+                display: flex !important;
+                flex-basis: auto;
+            }
+
+            .footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                line-height: 60px;
+            }
+
+            body {
+                margin-bottom: 100px;
+            }
+    </style>
+    
+    @* Move media queries to separate style block *@
+    <style>
+            @@media (max-width: 992px) {
+                .navbar-nav {
+                    flex-wrap: wrap;
+                    justify-content: flex-end;
+                }
+
+                    .navbar-nav .nav-link {
+                        font-size: 0.875rem;
+                        padding: 0.375rem 0.75rem;
+                    }
+            }
+        
+            @@media (max-width: 768px) {
+                .navbar-nav {
+                    gap: 0.25rem;
+                }
+
+                    .navbar-nav .nav-link {
+                        font-size: 0.75rem;
+                        padding: 0.25rem 0.5rem;
+                    }
+
+                .navbar-brand {
+                    font-size: 1.25rem;
+                }
+            }
+    </style>
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-globe"></i> GLMS - Global Logistics
+            </a>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Contracts" asp-action="Index">
+                                    <i class="fas fa-file-contract"></i> Contracts
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="ServiceRequests" asp-action="Index">
+                                    <i class="fas fa-truck"></i> Service Requests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="EmailLogs">
+                                    <i class="fas fa-envelope"></i> Email Logs
+                                </a>
+                            </li>
+                        }
+                        else if (User.IsInRole("Client"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Contracts" asp-action="Create">
+                                    <i class="fas fa-plus"></i> Request Contract
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="ServiceRequests" asp-action="Create">
+                                    <i class="fas fa-truck"></i> New Service Request
+                                </a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Profile">
+                                <i class="fas fa-user"></i> Profile
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="nav-link btn btn-link">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white" asp-controller="Account" asp-action="Login">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Register">
+                                <i class="fas fa-user-plus"></i> Register
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle"></i> @TempData["Info"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> @TempData["Warning"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <span class="text-muted">© @DateTime.Now.Year - Global Logistics Management System (GLMS) | TechMove Logistics</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

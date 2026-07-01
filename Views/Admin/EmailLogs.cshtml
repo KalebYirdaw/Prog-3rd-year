@@ -1,0 +1,68 @@
+﻿@model IEnumerable<GLMS.Models.EmailLog>
+
+@{
+    ViewData["Title"] = "Email Logs";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-envelope"></i> Email Notification Logs</h1>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>To</th>
+                            <th>Subject</th>
+                            <th>Related To</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var email in Model)
+                        {
+                            <tr class="@(email.IsRead ? "" : "table-warning")">
+                                <td>@email.SentAt.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>@email.ToEmail</td>
+                                <td>@email.Subject</td>
+                                <td>
+                                    @if (email.RelatedEntity != null)
+                                    {
+                                        <span class="badge bg-info">@email.RelatedEntity #@email.RelatedEntityId</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">@email.Status</span>
+                                    @if (!email.IsRead)
+                                    {
+                                        <form asp-action="MarkEmailAsRead" method="post" style="display: inline;">
+                                            <input type="hidden" name="id" value="@email.EmailLogId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Mark Read</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                            <tr class="@(email.IsRead ? "d-none" : "")">
+                                <td colspan="5">
+                                    <div class="alert alert-light">
+                                        <strong>Email Body:</strong>
+                                        <p>@Html.Raw(email.Body)</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

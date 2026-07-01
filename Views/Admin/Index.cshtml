@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+    <p class="text-muted">Welcome to the administration panel.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-primary h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-users"></i> User Management</h5>
+                    <p class="card-text">Manage system users, activate/deactivate accounts, and assign roles.</p>
+                    <a asp-action="Users" class="btn btn-light">Manage Users →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-info h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-envelope"></i> Email Logs</h5>
+                    <p class="card-text">View all email notifications sent by the system.</p>
+                    <a asp-action="EmailLogs" class="btn btn-light">View Logs →</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-success h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chart-line"></i> System Reports</h5>
+                    <p class="card-text">Generate reports and view system statistics.</p>
+                    <a asp-controller="Contracts" asp-action="Index" class="btn btn-light">View Contracts →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

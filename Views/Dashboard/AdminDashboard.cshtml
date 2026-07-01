@@ -1,0 +1,127 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+            <p class="text-muted">Welcome back, @ViewBag.UserName!</p>
+        </div>
+        <div class="col-auto">
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Contracts</h5>
+                    <h2 class="display-4">@ViewBag.TotalContracts</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Active Contracts</h5>
+                    <h2 class="display-4">@ViewBag.ActiveContracts</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Service Requests</h5>
+                    <h2 class="display-4">@ViewBag.TotalServiceRequests</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Requests</h5>
+                    <h2 class="display-4">@ViewBag.PendingRequests</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Workflow Steps -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0"><i class="fas fa-tasks"></i> Admin Workflow</h4>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <div class="step-circle">1</div>
+                    <h5>Create Contract</h5>
+                    <p>Create a new contract for a client</p>
+                    <a asp-controller="Contracts" asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Contract
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-circle">2</div>
+                    <h5>Sign Contract</h5>
+                    <p>Upload signed PDF agreement</p>
+                    <a asp-controller="Contracts" asp-action="Index" class="btn btn-info">
+                        <i class="fas fa-file-pdf"></i> Upload Agreement
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-circle">3</div>
+                    <h5>Change Status</h5>
+                    <p>Activate the contract</p>
+                    <a asp-controller="Contracts" asp-action="Index" class="btn btn-warning">
+                        <i class="fas fa-toggle-on"></i> Activate Contract
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-circle">4</div>
+                    <h5>Service Requests</h5>
+                    <p>View all service requests</p>
+                    <a asp-controller="ServiceRequests" asp-action="Index" class="btn btn-success">
+                        <i class="fas fa-truck"></i> View Requests
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Contracts -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-file-contract"></i> Recent Contracts</h5>
+        </div>
+        <div class="card-body">
+            <a asp-controller="Contracts" asp-action="Index" class="btn btn-outline-primary">
+                Manage All Contracts →
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .step-circle {
+        width: 60px;
+        height: 60px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0 auto 15px;
+    }
+</style>

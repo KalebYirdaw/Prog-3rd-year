@@ -1,0 +1,79 @@
+﻿@model GLMS.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = $"Service Request #{Model.ServiceRequestId} Details";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-truck"></i> Service Request Details #@Model.ServiceRequestId
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Request ID</dt>
+                        <dd class="col-sm-8">@Model.ServiceRequestId</dd>
+
+                        <dt class="col-sm-4">Contract</dt>
+                        <dd class="col-sm-8">
+                            <a asp-controller="Contracts" asp-action="Details" asp-route-id="@Model.ContractId">
+                                Contract #@Model.ContractId
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Client</dt>
+                        <dd class="col-sm-8">@Model.Contract?.Client?.Name</dd>
+
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+
+                        <dt class="col-sm-4">Amount (USD)</dt>
+                        <dd class="col-sm-8">$@Model.AmountUSD.ToString("F2")</dd>
+
+                        <dt class="col-sm-4">Exchange Rate</dt>
+                        <dd class="col-sm-8">@Model.ExchangeRateUsed.ToString("F4") ZAR/USD</dd>
+
+                        <dt class="col-sm-4">Amount (ZAR)</dt>
+                        <dd class="col-sm-8">R@Model.AmountZAR.ToString("F2")</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var statusClass = Model.Status.ToString() switch
+                                {
+                                            "Pending" => "warning",
+                                            "InProgress" => "primary",
+                                            "Completed" => "info",
+                                            "Cancelled" => "danger",
+                                            "OnHold" => "warning",
+                                            "Paid" => "success",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge bg-@statusClass">@Model.Status</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Created Date</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("dd MMMM yyyy HH:mm")</dd>
+                    </dl>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.ServiceRequestId" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

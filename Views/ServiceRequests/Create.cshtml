@@ -1,0 +1,167 @@
+﻿@{
+    ViewData["Title"] = "Create Service Request";
+    var contracts = ViewBag.Contracts as List<GLMS.Models.Contract>;
+    var currentRate = ViewBag.CurrentRate != null ? ViewBag.CurrentRate : 19.00m;
+    var getExchangeRateUrl = Url.Action("GetExchangeRate", "ServiceRequests");
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-plus-circle"></i> Create Service Request
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form id="serviceRequestForm" asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Select Active Contract</label>
+                            <select name="contractId" id="contractId" class="form-select" required>
+                                <option value="">-- Select a Contract --</option>
+                                @if (contracts != null && contracts.Any())
+                                {
+                                    foreach (var contract in contracts)
+                                    {
+                                        <option value="@contract.ContractId">
+                                            #@contract.ContractId - @contract.Client?.Name - @contract.ServiceLevel
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Service Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="3" required
+                                      placeholder="Describe the service required in detail..."></textarea>
+                        </div>
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Currency Conversion (USD → ZAR)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Amount (USD)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="amountUSD" id="amountUSD" class="form-control"
+                                                   step="0.01" min="0.01" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Amount (ZAR)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R</span>
+                                            <input type="text" id="amountZAR" class="form-control" readonly disabled />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle"></i>
+                                        Current Exchange Rate: <strong id="exchangeRateDisplay">@currentRate.ToString("N4")</strong> USD to ZAR
+                                        <span id="rateSource" class="badge bg-secondary ms-2">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-gavel"></i>
+                            <strong>Business Rule:</strong> Service requests can only be created for ACTIVE contracts.
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" id="submitBtn" class="btn btn-success">
+                                <i class="fas fa-check-circle"></i> Create Service Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // These variables are defined from Razor at the top of the file
+        var currentRate = parseFloat('@currentRate.ToString(System.Globalization.CultureInfo.InvariantCulture)');
+        var apiUrl = '@getExchangeRateUrl';
+        
+        function getExchangeRate() {
+            var rateElement = document.getElementById('exchangeRateDisplay');
+            var sourceElement = document.getElementById('rateSource');
+            
+            fetch(apiUrl)
+                .then(function(response) {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('API error');
+                })
+                .then(function(data) {
+                    currentRate = data.rate;
+                    rateElement.innerText = currentRate.toFixed(4);
+                    sourceElement.innerHTML = 'Live Rate';
+                    sourceElement.className = 'badge bg-success ms-2';
+                    convertCurrency();
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    sourceElement.innerHTML = 'Using Cached Rate';
+                    sourceElement.className = 'badge bg-warning ms-2';
+                });
+        }
+        
+        function convertCurrency() {
+            var usdInput = document.getElementById('amountUSD');
+            var zarInput = document.getElementById('amountZAR');
+            
+            if (usdInput && zarInput) {
+                var usdAmount = parseFloat(usdInput.value);
+                if (!isNaN(usdAmount) && usdAmount > 0) {
+                    zarInput.value = (usdAmount * currentRate).toFixed(2);
+                } else {
+                    zarInput.value = '';
+                }
+            }
+        }
+        
+        function validateContract() {
+            var contractSelect = document.getElementById('contractId');
+            var submitBtn = document.getElementById('submitBtn');
+            if (contractSelect && submitBtn) {
+                submitBtn.disabled = !contractSelect.value;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var amountUSD = document.getElementById('amountUSD');
+            var contractId = document.getElementById('contractId');
+            
+            if (amountUSD) {
+                amountUSD.addEventListener('input', convertCurrency);
+            }
+            
+            if (contractId) {
+                contractId.addEventListener('change', validateContract);
+                validateContract();
+            }
+            
+            getExchangeRate();
+            setInterval(getExchangeRate, 60000);
+        });
+    </script>
+}
