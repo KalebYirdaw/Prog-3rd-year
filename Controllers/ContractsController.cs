@@ -1,165 +1,107 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using GLMS.Models;
-using GLMS.Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using GLMS.API.Models;
+using GLMS.API.Data;
 
-namespace GLMS.Controllers
+namespace GLMS.API.Controllers
 {
-    [Authorize]
-    public class ContractsController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ContractsController : ControllerBase
     {
-        private readonly IApiService _apiService;
+        private readonly ApplicationDbContext _context;
 
-        public ContractsController(IApiService apiService)
+        public ContractsController(ApplicationDbContext context)
         {
-            _apiService = apiService;
+            _context = context;
         }
 
-        public async Task<IActionResult> Index(string? status, DateTime? startDate, DateTime? endDate)
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var contracts = await _apiService.GetContractsAsync(status, startDate, endDate);
-                ViewBag.IsAdmin = User.IsInRole("Admin");
-                ViewBag.StatusFilter = status;
-                ViewBag.StartDateFilter = startDate?.ToString("yyyy-MM-dd");
-                ViewBag.EndDateFilter = endDate?.ToString("yyyy-MM-dd");
-                return View(contracts);
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Error loading contracts: {ex.Message}";
-                return View(new List<Contract>());
-            }
+            var contracts = await _context.Contracts.ToListAsync();
+            return Ok(contracts);
         }
 
-        public async Task<IActionResult> Details(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            try
-            {
-                var contract = await _apiService.GetContractAsync(id);
-                if (contract == null) return NotFound();
-                return View(contract);
-            }
-            catch
-            {
-                TempData["Error"] = "Error loading contract details";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        public IActionResult Create()
-        {
-            return View();
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Contract not found" });
+            return Ok(contract);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Contract contract)
+        public async Task<IActionResult> Create([FromBody] Contract contract)
         {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    // Set default values if not provided
-                    if (contract.ClientId == 0) contract.ClientId = 1;
+            if (contract == null)
+                return BadRequest(new { message = "Invalid contract data" });
 
-                    var created = await _apiService.CreateContractAsync(contract);
-                    TempData["Success"] = $"Contract #{created.ContractId} created successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", $"Error creating contract: {ex.Message}");
-                }
-            }
-            return View(contract);
+            if (contract.ClientId <= 0)
+                contract.ClientId = 1;
+
+            // Let database auto-generate the ID
+            contract.ContractId = 0;
+
+            _context.Contracts.Add(contract);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetById), new { id = contract.ContractId }, contract);
         }
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            try
-            {
-                var contract = await _apiService.GetContractAsync(id);
-                if (contract == null) return NotFound();
-                return View(contract);
-            }
-            catch
-            {
-                TempData["Error"] = "Error loading contract for editing";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Contract contract)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Contract contract)
         {
             if (id != contract.ContractId)
-            {
-                TempData["Error"] = "Contract ID mismatch";
-                return RedirectToAction(nameof(Index));
-            }
+                return BadRequest(new { message = "ID mismatch" });
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var success = await _apiService.UpdateContractAsync(contract);
-                    if (success)
-                    {
-                        TempData["Success"] = $"Contract #{id} updated successfully!";
-                        return RedirectToAction(nameof(Index));
-                    }
-                    else
-                    {
-                        TempData["Error"] = "Failed to update contract";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    TempData["Error"] = $"Error updating contract: {ex.Message}";
-                }
-            }
-            return View(contract);
+            var existing = await _context.Contracts.FindAsync(id);
+            if (existing == null)
+                return NotFound(new { message = "Contract not found" });
+
+            existing.ClientId = contract.ClientId;
+            existing.StartDate = contract.StartDate;
+            existing.EndDate = contract.EndDate;
+            existing.Status = contract.Status;
+            existing.ServiceLevel = contract.ServiceLevel;
+            existing.SignedAgreementPath = contract.SignedAgreementPath;
+            existing.OriginalFileName = contract.OriginalFileName;
+            existing.AgreementFileSize = contract.AgreementFileSize;
+            existing.AgreementUploadedDate = contract.AgreementUploadedDate;
+            existing.LastDownloadedDate = contract.LastDownloadedDate;
+            existing.DownloadCount = contract.DownloadCount;
+
+            await _context.SaveChangesAsync();
+            return Ok(existing);
         }
 
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
+        {
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Contract not found" });
+
+            if (Enum.TryParse<ContractStatus>(status, true, out var newStatus))
+            {
+                contract.Status = newStatus;
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Status updated", status = contract.Status });
+            }
+            return BadRequest(new { message = "Invalid status value" });
+        }
+
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                var contract = await _apiService.GetContractAsync(id);
-                if (contract == null) return NotFound();
-                return View(contract);
-            }
-            catch
-            {
-                TempData["Error"] = "Error loading contract for deletion";
-                return RedirectToAction(nameof(Index));
-            }
-        }
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null)
+                return NotFound(new { message = "Contract not found" });
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            try
-            {
-                var success = await _apiService.DeleteContractAsync(id);
-                if (success)
-                {
-                    TempData["Success"] = $"Contract #{id} deleted successfully!";
-                }
-                else
-                {
-                    TempData["Error"] = "Failed to delete contract";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Error deleting contract: {ex.Message}";
-            }
-            return RedirectToAction(nameof(Index));
+            _context.Contracts.Remove(contract);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Contract deleted" });
         }
     }
 }

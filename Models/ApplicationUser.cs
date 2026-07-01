@@ -1,29 +1,15 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
-namespace GLMS.Models
+namespace GLMS.API.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        [PersonalData]
         public string? FirstName { get; set; }
-
-        [PersonalData]
         public string? LastName { get; set; }
-
-        [PersonalData]
-        public string? UserRole { get; set; } // "Admin" or "Client"
-
-        [PersonalData]
-        public int? ClientId { get; set; } // Link to client if role is Client
-
-        [PersonalData]
+        public string? UserRole { get; set; }
+        public int? ClientId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        [PersonalData]
+        public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; } = true;
-
-        // Navigation property
-        [PersonalData]
-        public virtual Client? Client { get; set; }
     }
 }
